@@ -3,7 +3,9 @@ import { connect } from 'react-redux';
 import _ from 'lodash';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
-
+import Card from '@material-ui/core/Card';
+import Typography from '@material-ui/core/Typography';
+import CardContent from '@material-ui/core/CardContent';
 import { withStyles } from '@material-ui/core/styles';
 
 import { history } from "../../store";
@@ -11,11 +13,15 @@ import { getPlanets } from "../../actions/planets";
 
 
 const styles = (theme => ({
+   root: {
+      width: "100%"
+   },
    paper: {
       marginTop: theme.spacing(8),
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
+      width: "100%"
    },
 }));
 
@@ -26,94 +32,106 @@ class Search extends React.Component {
       selectedPlanet: [],
    }
 
-   componentWillMount() {
-      if (localStorage.getItem('loggedName') === null || localStorage.getItem('loggedName') === undefined) {
+   componentDidMount() {
+      if (!localStorage.getItem('loggedName')) {
          history.push("/");
+      }
+      else {
+         this.props.dispatch(getPlanets());
       }
    }
 
-   componentDidMount() {
-      this.props.dispatch(getPlanets());
-   }
-
-   _onFormFieldChange = (event) => {
+   _onFormFieldChange = (event, value) => {
 
       const { planetsList } = this.props;
 
       const selectedPlanet = _.filter(planetsList, (planets) => (
-         planets.name === event.target.value
+         planets.name === value
       ));
 
       this.setState({ selectedPlanet: selectedPlanet })
    }
 
-   renderResults() {
-      let { selectedPlanet } = this.state;
+   _renderSearchResults = ({classes, selectedPlanet}) => (
+      <React.Fragment>
+         <Typography className={classes.title} color="textSecondary" gutterBottom>
+            {selectedPlanet[0].name}
+         </Typography>
+         <Typography variant="h5" component="h2">
+            Population: {selectedPlanet[0].population}
+         </Typography>
+         <Typography className={classes.pos} color="textSecondary">
+            Rotation Period: {selectedPlanet[0].rotation_period}
+         </Typography>
+         <Typography variant="body2" component="p">
+            orbital Period: {selectedPlanet[0].orbital_period}
+         </Typography>
+         <Typography variant="body2" component="p">
+            Diameter: {selectedPlanet[0].diameter}
+         </Typography>
+         <Typography variant="body2" component="p">
+            Climate: {selectedPlanet[0].climate}
+         </Typography>
+         <Typography variant="body2" component="p">
+            Gravity: {selectedPlanet[0].gravity}
+         </Typography>
+         <Typography variant="body2" component="p">
+            Terrain: {selectedPlanet[0].terrain}
+         </Typography>
+         <Typography variant="body2" component="p">
+            Surface water: {selectedPlanet[0].surface_water}
+         </Typography>
+      </React.Fragment>
+   )
 
-      if (selectedPlanet.length == 0) {
-         return (<div>No Search Results.</div>);
-      }
+   _renderNoResults = () => (
+      <Typography variant="body2" component="p">
+         No Search Results...
+      </Typography>
+   )
+
+   _renderResults() {
+      const { selectedPlanet } = this.state;
+      const { classes } = this.props
 
       return (
-         <div>
-            <p>Name: {selectedPlanet[0].name}</p>
-            <p>Rotation Period: {selectedPlanet[0].rotation_period}</p>
-            <p>orbital Period: {selectedPlanet[0].orbital_period}</p>
-            <p>Diameter: {selectedPlanet[0].diameter}</p>
-            <p>Climate: {selectedPlanet[0].climate}</p>
-            <p>Gravity: {selectedPlanet[0].gravity}</p>
-            <p>Terrain: {selectedPlanet[0].terrain}</p>
-            <p>Surface water: {selectedPlanet[0].surface_water}</p>
-            <p>Population: {selectedPlanet[0].population}</p>
-         </div>
+         <Card className={classes.root}>
+            <CardContent>
+               {selectedPlanet.length === 0 ? this._renderNoResults() : this._renderSearchResults({classes, selectedPlanet})}
+            </CardContent>
+         </Card>
       );
 
-   }
-
-   handleLogout() {
-      localStorage.clear();
-      history.push("/");
-   }
-
-   renderHeader() {
-      const uname = localStorage.getItem('loggedName');
-
-      return (
-         <div>
-            Welcome, {uname} <b><a onClick={this.handleLogout}>Logout</a></b>
-         </div >
-
-      );
    }
 
    render() {
       const { classes, planetsList } = this.props
       return (
          <div className={classes.paper}>
-            {this.renderHeader()}
-            <div>
-               <Autocomplete
-                  id="combo-box-demo"
-                  options={planetsList}
-                  getOptionLabel={option => option.name}
-                  defaultValue={planetsList[0]}
-
-                  renderInput={params => (
-                     <TextField
-                        variant="outlined"
-                        margin="normal"
-                        fullWidth
-                        id="searchBox"
-                        label="Search Planets"
-                        name="searchBox"
-
-                        autoFocus
-                        onChange={this._onFormFieldChange}
-                     />
-                  )}
-               />
-            </div>
-            {this.renderResults()}
+            <Autocomplete
+               id="combo-box-demo"
+               name="combo-box-demo"
+               options={planetsList}
+               className={classes.root}
+               getOptionLabel={option => option.name}
+               onInputChange={(event, value) => {
+                  this._onFormFieldChange(event, value)
+               }}
+               renderInput={params => (
+                  <TextField
+                     {...params} 
+                     variant="outlined"
+                     margin="normal"
+                     fullWidth
+                     id="searchBox"
+                     label="Search Planets"
+                     name="searchBox"
+                     autoFocus
+                     //onChange={this._onFormFieldChange}
+                  />
+               )}
+            />
+            {this._renderResults()}
          </div>
       );
    }

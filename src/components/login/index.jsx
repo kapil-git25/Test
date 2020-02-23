@@ -47,7 +47,14 @@ class SignIn extends React.Component {
    }
 
    componentDidMount() {
-      this.props.dispatch(getUser());
+      const { userList } = this.props
+      if (userList && !userList.length) {
+         localStorage.setItem('loggedName', "");
+         this.props.dispatch(getUser());
+      }
+      if (localStorage.getItem('loggedName')) {
+         history.push("/search");
+      }
    }
 
    _onFormFieldChange = (event) => {
